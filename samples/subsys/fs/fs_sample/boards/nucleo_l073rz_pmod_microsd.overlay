@@ -1,0 +1,22 @@
+/*
+ * Digilent Pmod MicroSD on Nucleo-L073RZ (Arduino SPI + D10 for CS).
+ * Wiring: see zephyr/boards/st/nucleo_l073rz/README.pmod_microsd
+ */
+
+&spi1 {
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+
+	sdhc0: sdhc@0 {
+		compatible = "zephyr,sdhc-spi-slot";
+		reg = <0>;
+		status = "okay";
+
+		mmc {
+			compatible = "zephyr,sdmmc-disk";
+			disk-name = "SD";
+			status = "okay";
+		};
+
+		spi-max-frequency = <24000000>;
+	};
+};

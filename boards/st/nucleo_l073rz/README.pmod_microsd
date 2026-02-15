@@ -1,0 +1,93 @@
+Pmod MicroSD (Digilent) on Nucleo-L073RZ
+========================================
+
+This overlay enables the Digilent Pmod MicroSD (microSD card slot) over SPI
+on the Nucleo-L073RZ using the Arduino Uno R3 connector.
+
+Pin wiring (Pmod MicroSD 12-pin J1 → Nucleo-L073RZ Arduino connector)
+--------------------------------------------------------------------
+
+| Pmod pin | Signal  | Nucleo-L073RZ      | Arduino name |
+|----------|---------|--------------------|--------------|
+| 1        | ~CS     | PB6                | D10          |
+| 2        | MOSI    | PA7                | D11          |
+| 3        | MISO    | PA6                | D12          |
+| 4        | SCK     | PA5                | D13          |
+| 5        | GND     | GND                | GND          |
+| 6        | VCC     | 3.3V               | 3.3V         |
+
+Pins 7–12 (DAT1, DAT2, CD, NC, GND, VCC) are not required for SPI mode;
+leave them unconnected or connect GND/VCC if your cable has them.
+
+Build
+-----
+
+Using the filesystem sample (recommended). From your Zephyr workspace root
+(the directory that contains zephyr/ and west.yml):
+
+  cd <path-to-your-zephyr-workspace>
+  west build -b nucleo_l073rz zephyr/samples/subsys/fs/fs_sample --build-dir build_nucleo_l073rz -- \
+    -DDTC_OVERLAY_FILE=boards/nucleo_l073rz_pmod_microsd.overlay \
+    -DEXTRA_CONF_FILE=boards/nucleo_l073rz_pmod_microsd.conf
+
+Using the overlay from the board directory in your own app (enable CONFIG_SPI
+in your prj.conf or a .conf). From your Zephyr workspace root:
+
+  cd <path-to-your-zephyr-workspace>
+  west build -b nucleo_l073rz --build-dir build_nucleo_l073rz -- -DDTC_OVERLAY_FILE=zephyr/boards/st/nucleo_l073rz/pmod_microsd.overlay
+
+Flash (macOS)
+-------------
+
+From your Zephyr workspace root, use the same build directory as above:
+
+  cd <path-to-your-zephyr-workspace>
+  west flash -d build_nucleo_l073rz --runner openocd
+
+See the log (macOS)
+-------------------
+
+The board uses USART2 at 115200 8N1 over the ST-Link Virtual COM port. Connect
+the Nucleo via the ST-LINK USB port, then:
+
+1. Find the serial port:
+
+     ls /dev/cu.usb*
+
+   You should see something like /dev/cu.usbmodem14103.
+
+2. Open a serial terminal at 115200 baud. For example with screen:
+
+     screen /dev/cu.usbmodem14103 115200
+
+   Replace the device name with yours. To exit screen: Ctrl+A, then K, then Y.
+
+3. Reset the board (USER button or unplug/replug USB) to see the sample output
+   (e.g. block count, sector size, "Disk mounted.", and the root directory
+   listing).
+
+Required Kconfig (usually enabled by the sample)
+------------------------------------------------
+
+- CONFIG_DISK_ACCESS
+- CONFIG_SDHC
+- CONFIG_SPI
+- For FAT FS: CONFIG_FILE_SYSTEM and CONFIG_FAT_FILESYSTEM_ELM
+
+Usage (init, read, write)
+-------------------------
+
+The SD card is exposed as a disk named "SD" via the Disk Access API. You can:
+
+1. Initialize: disk_access_init() or DISK_IOCTL_CTRL_INIT.
+2. Read/write blocks: disk_access_read(), disk_access_write().
+3. Or mount a filesystem (e.g. FAT) and use fs_open(), fs_read(), fs_write().
+
+See Zephyr documentation: Disk Access API, File system API, and
+samples/subsys/fs/fs_sample for a full example.
+
+References
+----------
+
+- Pmod MicroSD: https://digilent.com/shop/pmod-microsd-microsd-card-slot/
+- Nucleo-L073RZ: https://www.st.com/en/evaluation-tools/nucleo-l073rz.html

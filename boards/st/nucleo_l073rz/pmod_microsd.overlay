@@ -1,0 +1,25 @@
+/*
+ * Overlay for Digilent Pmod MicroSD (SPI) on Nucleo-L073RZ.
+ *
+ * Wiring: use Arduino connector as per README.pmod_microsd in this directory.
+ * Build with: -DOVERLAY_FILE=boards/st/nucleo_l073rz/pmod_microsd.overlay
+ */
+
+&spi1 {
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+
+	sdhc0: sdhc@0 {
+		compatible = "zephyr,sdhc-spi-slot";
+		reg = <0>;
+		status = "okay";
+
+		mmc {
+			compatible = "zephyr,sdmmc-disk";
+			disk-name = "SD";
+			status = "okay";
+		};
+
+		/* 24 MHz after init; use lower for compatibility if needed */
+		spi-max-frequency = <24000000>;
+	};
+};
